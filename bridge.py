@@ -3,8 +3,7 @@ import time
 import subprocess
 from datetime import datetime
 
-WATCH_FILE = "web_status.html"
-
+WATCH_FILE =" certified_targets.json"
 def push_to_web():
     try:
         print(f"[{datetime.now().strftime('%H:%M:%S')}] Change detected. Syncing to HVL-Web...")
