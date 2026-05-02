@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HEALY VECTOR LABS | DAGOR BRAGOLLACH</title>
+    <style>
+        body {
+            background-color: #050505;
+            color: #39ff14; /* God Candle Green */
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px;
+        }
+        h1 {
+            color: #bf00ff; /* Electric Purple */
+            text-shadow: 0 0 10px #bf00ff, 0 0 20px #bf00ff;
+            font-size: 2.5rem;
+            border-bottom: 2px solid #39ff14;
+        }
+        .matrix-box {
+            border: 1px solid #bf00ff;
+            box-shadow: 0 0 15px rgba(191, 0, 255, 0.3);
+            padding: 20px;
+            width: 80%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.8);
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { color: #bf00ff; text-align: left; border-bottom: 1px solid #39ff14; padding: 10px; }
+        td { padding: 10px; border-bottom: 1px rgba(57, 255, 20, 0.2) solid; }
+        .ticker { font-weight: bold; color: #fff; }
+        .status-go { color: #39ff14; font-weight: bold; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <h1>PROJECT DAGOR BRAGOLLACH</h1>
+    <div class="matrix-box">
+        <p>> INITIALIZING HVL-SCOUT DATA STREAM...</p>
+        <p>> ENTROPY MODEL: $E(t) = E_0 e^{-2t}$</p>
+        <table id="target-table">
+            <thead>
+                <tr>
+                    <th>TICKER</th>
+                    <th>CONVICTION</th>
+                    <th>RSI / V-SCORE</th>
+                </tr>
+            </thead>
+            <tbody id="target-data">
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function fetchTargets() {
+            const response = await fetch('certified_targets.json');
+            const data = await response.json();
+            const tableBody = document.getElementById('target-data');
+            tableBody.innerHTML = ''; // Clear old shit
+
+            data.targets.forEach(target => {
+                const row = `<tr>
+                    <td class="ticker">${target.ticker}</td>
+                    <td class="status-go">HIGH CONVICTION - GO</td>
+                    <td>${target.rsi} / ${target.v_score}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+        fetchTargets();
+        setInterval(fetchTargets, 60000); // Refresh every minute
+    </script>
+</body>
+              </html>
+
