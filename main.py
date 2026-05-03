@@ -1,52 +1,64 @@
-import os
-import time
-from agents.edgar_allan_bro import telltale_heart_reality_check
-from agents.dutchman import initialize_dutchman, execute_scout_order
-from utils.knock_list import get_sosa_knock_list
-import robin_stocks.robinhood as rs
+import os, sys, time, json
+from datetime import datetime, timedelta
+
+PERI = "\033[38;5;147m"
+GOLD = "\033[38;5;220m"
+print(f"{PERI}SOSA ORCHESTRATOR V1.8 | {datetime.now().strftime('%H:%M:%S')} | CORTEX SYNCED\033[0m")
+
+HISTORY_FILE = "trade_history.json"
+
+def load_bullets():
+    if not os.path.exists(HISTORY_FILE): return []
+    try:
+        with open(HISTORY_FILE, "r") as f:
+            history = json.load(f)
+        five_days_ago = datetime.now() - timedelta(days=5)
+        return [t for t in history if datetime.fromisoformat(t) > five_days_ago]
+    except: return []
+
+def save_bullet(timestamp):
+    history = load_bullets()
+    history.append(timestamp.isoformat())
+    with open(HISTORY_FILE, "w") as f:
+        json.dump(history, f)
 
 def sosa_orchestrator():
-    """
-    SUDO: The Master Orchestrator. 
-    Monitors the NOC List for the 2:00 PM Flush.
-    """
-    print("🦅 SOSA: Orchestrator is online. The 'Bad Company' is playing.")
-    
-    # 1. Boot up the Dutchman Bridge
-    initialize_dutchman()
-    
-    # 2. Load the Hit List
-    targets = get_sosa_knock_list()
+    print(f"{GOLD}SOSA: Initiating Cortex Handshake...{0}")
+    try:
+        from fase_master import (
+            STOCKS, rh_login, execute_strike, 
+            veritas_bridge, price_history, get_cortex_price
+        )
+        rh_login()
+    except Exception as e:
+        print(f"\033[91mCRITICAL ERROR: {e}\033[0m")
+        return
+
+    print(f"{PERI}SOSA: Handshake Verified. SPARTAN 300 ACTIVE.{0}")
     
     while True:
-        for target in targets:
-            ticker = target['ticker']
-            floor = target['reality_floor']
-            
-            # 3. Audit Reality Anchor ($R$)
-            reality_r = telltale_heart_reality_check(ticker)
-            
-            # 4. Check the Tape (Live Midday Price)
-            price_data = rs.stocks.get_latest_price(ticker)
-            current_price = float(price_data[0])
-            
-            print(f"🕵️ SOSA Audit: {ticker} | Price: ${current_price} | R: ${reality_r}")
-            
-            # 5. The Execution Logic: 2:00 PM Reversal
-            if current_price <= floor:
-                print(f"🎯 TARGET ACQUIRED: {ticker} hit the ${floor} floor.")
-                
-                # Using the $39 Scout Capital for the first strike
-                # 13 shares of WTI @ ~$3 ≈ $39
-                quantity = 13 if ticker == "WTI" else 1 
-                
-                execute_scout_order(ticker, floor, quantity)
-                print("🔥 Strike Complete. Scout in the field.")
-                return 
-            
-        print("⏳ Waiting for the Flush... The 'hunks' are still holding the line.")
-        time.sleep(60) # 1-minute pulse check
+        spent = load_bullets()
+        if len(spent) >= 3:
+            sys.stdout.write(f"\r{GOLD}PDT GUARD: 3/3 Bullets Spent. Magazine Empty.{0}")
+            sys.stdout.flush()
+            time.sleep(60)
+            continue
+
+        for ticker in STOCKS:
+            try:
+                price = get_cortex_price(ticker)
+                if not price: continue
+                if veritas_bridge(ticker, price, price_history[ticker]):
+                    execute_strike(ticker, price)
+                    save_bullet(datetime.now())
+                    if len(load_bullets()) >= 3: break
+            except: continue
+        time.sleep(60)
 
 if __name__ == "__main__":
-    sosa_orchestrator()
+    try:
+        sosa_orchestrator()
+    except KeyboardInterrupt:
+        print(f"\n\033[91mSOSA: Manual Override. Engine Halted.\033[0m")
+        sys.exit()
 
